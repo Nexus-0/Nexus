@@ -5,13 +5,17 @@
 <script setup>
 import { ref, onMounted } from 'vue';
 import * as THREE from 'three';
+import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
+import { initPhysicsWorld } from '../physics/physicsWorld';
+import { createPhysicsObject } from '../physics/physicsObject';
 import Ammo from 'ammo.js';
-import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 
 const canvasContainer = ref(null);
+let physicsWorld;
+const objects = [];
 
 onMounted(() => {
-  // 创建 Three.js 场景
+  // 初始化 Three.js 场景
   const scene = new THREE.Scene();
   const camera = new THREE.PerspectiveCamera(
     75,
@@ -19,7 +23,7 @@ onMounted(() => {
     0.1,
     1000
   );
-  camera.position.z = 5;
+  camera.position.set(5, 5, 10);
 
   const renderer = new THREE.WebGLRenderer({ antialias: true });
   renderer.setSize(window.innerWidth, window.innerHeight);
@@ -28,103 +32,53 @@ onMounted(() => {
 
   const controls = new OrbitControls(camera, renderer.domElement);
   controls.enableDamping = true;
-  controls.dampingFactor = 0.25;
-  controls.screenSpacePanning = false;
 
-  // 创建物理体和几何体
-  const createPhysicsObject = (geometryType, materialType, options = {}) => {
-    const {
-      mass = 1,
-      position = { x: 0, y: 0, z: 0 },
-      shapeType = "box",
-      size = [1, 1, 1],
-    } = options;
-
-    let geometry, material, shape;
-
-    if (geometryType === "sphere") {
-      geometry = new THREE.SphereGeometry(...size);
-    } else if (geometryType === "box") {
-      geometry = new THREE.BoxGeometry(...size);
-    }
-
-    if (materialType === "standard") {
-      material = new THREE.MeshStandardMaterial({
-        color: 0xff0000,
-        roughness: 0.5,
-        metalness: 0.5,
-      });
-    } else if (materialType === "basic") {
-      material = new THREE.MeshBasicMaterial({ color: 0xff0000 });
-    }
-
-    const mesh = new THREE.Mesh(geometry, material);
-    mesh.castShadow = true;
-    mesh.receiveShadow = true;
-    mesh.position.set(position.x, position.y, position.z);
-    scene.add(mesh);
-
-    if (shapeType === "sphere") {
-      shape = new Ammo.btSphereShape(size[0]);
-    } else if (shapeType === "box") {
-      shape = new Ammo.btBoxShape(
-        new Ammo.btVector3(size[0] / 2, size[1] / 2, size[2] / 2)
-      );
-    }
-
-    const transform = new Ammo.btTransform();
-    transform.setIdentity();
-    transform.setOrigin(new Ammo.btVector3(position.x, position.y, position.z));
-
-    const motionState = new Ammo.btDefaultMotionState(transform);
-    const localInertia = new Ammo.btVector3(0, 0, 0);
-    shape.calculateLocalInertia(mass, localInertia);
-
-    const rbInfo = new Ammo.btRigidBodyConstructionInfo(
-      mass,
-      motionState,
-      shape,
-      localInertia
-    );
-    const body = new Ammo.btRigidBody(rbInfo);
-
-    return { mesh, body };
-  };
-
-  // 实例化 Cube 和 Sphere，并将它们的物理体添加到世界中
-  const cube = createPhysicsObject("box", "standard", {
-    mass: 1,
-    position: { x: 3, y: 2, z: 0 },
-    shapeType: "box",
-    size: [1, 1, 1],
-  });
-  const sphere = createPhysicsObject("sphere", "standard", {
-    mass: 1,
-    position: { x: 3, y: 4, z: 0 },
-    shapeType: "sphere",
-    size: [1, 32, 32],
-  });
-
-  // 创建地面物理体
-  const ground = createPhysicsObject("box", "standard", {
-    mass: 0,
-    position: { x: 0, y: -0.5, z: 0 },
-    shapeType: "box",
-    size: [50, 0.1, 50],
-  });
-
-  scene.add(cube.mesh);
-  scene.add(sphere.mesh);
-  scene.add(ground.mesh);
-
-  // 创建光源
-  const light = new THREE.PointLight(0xffffff, 1, 100);
-  light.position.set(5, 5, 5);
+  // 添加光源
+  const light = new THREE.DirectionalLight(0xffffff, 1);
+  light.position.set(10, 10, 10);
   scene.add(light);
 
-  // 渲染和动画
+  // 初始化物理世界
+  physicsWorld = initPhysicsWorld();
+
+  // 创建地面
+  const ground = createPhysicsObject('box', {
+    mass: 0,
+    size: [20, 1, 20],
+    position: [0, -0.5, 0],
+    color: 0x888888
+  }, physicsWorld);
+  scene.add(ground.mesh);
+
+  // 创建动态物体（如球体）
+  const sphere = createPhysicsObject('sphere', {
+    mass: 1,
+    size: [1],
+    position: [0, 5, 0],
+    color: 0xff0000
+  }, physicsWorld);
+  scene.add(sphere.mesh);
+  objects.push(sphere);
+
+  // 更新物理世界
+  const clock = new THREE.Clock();
+  function updatePhysics(deltaTime) {
+    physicsWorld.stepSimulation(deltaTime, 10);
+
+    // 更新物体位置
+    objects.forEach(({ mesh, body }) => {
+      const transform = new Ammo.btTransform();
+      body.getMotionState().getWorldTransform(transform);
+      const origin = transform.getOrigin();
+      mesh.position.set(origin.x(), origin.y(), origin.z());
+    });
+  }
+
+  // 动画循环
   function animate() {
     requestAnimationFrame(animate);
+    const deltaTime = clock.getDelta();
+    updatePhysics(deltaTime);
     renderer.render(scene, camera);
   }
 
