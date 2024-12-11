@@ -59,6 +59,12 @@ onMounted(() => {
   }, physicsWorld);
   scene.add(sphere.mesh);
   objects.push(sphere);
+    // 动态窗口大小调整
+    window.addEventListener('resize', () => {
+    camera.aspect = window.innerWidth / window.innerHeight;
+    camera.updateProjectionMatrix();
+    renderer.setSize(window.innerWidth, window.innerHeight);
+  });
 
   // 更新物理世界
   const clock = new THREE.Clock();
