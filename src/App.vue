@@ -104,21 +104,6 @@ onMounted(() => {
   const cube = createPhysicsObject('box', 'standard', { mass: 1, position: { x: 3, y: 2, z: 0 }, shapeType: 'box', size: [1, 1, 1] });
   const sphere = createPhysicsObject('sphere', 'standard', { mass: 1, position: { x: 3, y: 4, z: 0 }, shapeType: 'sphere', size: [1, 32, 32] });
 
-  // 创建立方体几何体和材质
-  // const geometry = new THREE.BoxGeometry();
-  // const material = new THREE.MeshStandardMaterial({ color: 0x00ff00, roughness: 0.5, metalness: 0.5 });
-  // const cube = new THREE.Mesh(geometry, material);
-  // cube.castShadow = true; // 立方体投射阴影
-  // cube.receiveShadow = true; // 立方体接收阴影
-  // scene.add(cube);
-  // 创建球体几何体和材质
-  // const sphereGeometry = new THREE.SphereGeometry(1, 32, 32); // 半径 1, 细分度 32
-  // const sphereMaterial = new THREE.MeshStandardMaterial({ color: 0xff0000, roughness: 0.5, metalness: 0.5 });
-  // const sphere = new THREE.Mesh(sphereGeometry, sphereMaterial);
-  // sphere.position.set(3, 2, 0); // 设置球体位置
-  // sphere.castShadow = true; // 球体投射阴影
-  // sphere.receiveShadow = true; // 球体接收阴影
-  // scene.add(sphere);
 
 
   // 创建地面
@@ -139,38 +124,7 @@ onMounted(() => {
   // 修改光照强度
   pointLight.intensity = 200;
 
-  // 为立方体创建物理体
-  // const cubeMass = 1; // 立方体质量
-  // const cubeShape = new Ammo.btBoxShape(new Ammo.btVector3(0.5, 0.5, 0.5)); // 立方体物理形状
-  // const cubeTransform = new Ammo.btTransform();
-  // cubeTransform.setIdentity();
-  // cubeTransform.setOrigin(new Ammo.btVector3(0, 2, 0)); // 立方体的位置在 Y=2 处
 
-  // const motionState = new Ammo.btDefaultMotionState(cubeTransform);
-  // const localInertia = new Ammo.btVector3(0, 0, 0);
-  // cubeShape.calculateLocalInertia(cubeMass, localInertia);
-
-  // const rbInfo = new Ammo.btRigidBodyConstructionInfo(cubeMass, motionState, cubeShape, localInertia);
-  // const cubeBody = new Ammo.btRigidBody(rbInfo);
-
-  // // 将物理体添加到物理世界
-  // physicsWorld.addRigidBody(cubeBody);
-
-  // const sphereMass = 1; // 球体质量
-  // const sphereShape = new Ammo.btSphereShape(1); // 球体物理形状
-  // const sphereTransform = new Ammo.btTransform();
-  // sphereTransform.setIdentity();
-  // sphereTransform.setOrigin(new Ammo.btVector3(3, 2, 0)); // 球体的位置
-
-  // const sphereMotionState = new Ammo.btDefaultMotionState(sphereTransform);
-  // const sphereLocalInertia = new Ammo.btVector3(0, 0, 0);
-  // sphereShape.calculateLocalInertia(sphereMass, sphereLocalInertia);
-
-  // const sphereRbInfo = new Ammo.btRigidBodyConstructionInfo(sphereMass, sphereMotionState, sphereShape, sphereLocalInertia);
-  // const sphereBody = new Ammo.btRigidBody(sphereRbInfo);
-
-  // // 将球体物理体添加到物理世界
-  // physicsWorld.addRigidBody(sphereBody);  
 
   // 创建地面物理体
   const groundShape = new Ammo.btBoxShape(new Ammo.btVector3(50, 0.1, 50)); // 创建一个大的立方体作为地面
@@ -264,16 +218,7 @@ onMounted(() => {
     // 更新物理世界
     physicsWorld.stepSimulation(1 / 60, 10);
 
-    // // 获取物理体的位置并更新 Three.js 中立方体的位置
-    // const transform = cubeBody.getWorldTransform();
-    // const origin = transform.getOrigin();
-    // cube.position.set(origin.x(), origin.y(), origin.z());
-      // 获取物理体的位置并更新 Three.js 中球体的位置
-    //   const sphereTransform = sphereBody.getWorldTransform();
-    // const sphereOrigin = sphereTransform.getOrigin();
-    // sphere.position.set(sphereOrigin.x(), sphereOrigin.y(), sphereOrigin.z());
-
-    // 获取物理体的位置并更新 Three.js 中物体的位置
+  
     const cubeTransform = cube.body.getWorldTransform();
     const cubeOrigin = cubeTransform.getOrigin();
     cube.mesh.position.set(cubeOrigin.x(), cubeOrigin.y(), cubeOrigin.z());
