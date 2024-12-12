@@ -8,7 +8,7 @@ import * as dat from 'dat.gui';
 
 onMounted(() => {
   const gui = new dat.GUI();
-  gui.add({ gravity: -1.68 }, 'gravity', -20, 0).onChange((value) => {
+  gui.add({ gravity: -9.81 }, 'gravity', -20, 0).onChange((value) => {
     physicsWorld.setGravity(new Ammo.btVector3(0, value, 0));
   });
 });
